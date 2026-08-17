@@ -57,10 +57,11 @@ mock-llm-server.js  — LLM 연동 테스트용 목 서버 (개발용)
 ## LLM 연동 방법
 
 1. 성찰 코치 패널의 **⚙️ LLM 연동 설정**을 엽니다.
-2. **API 주소**에 OpenAI 호환 엔드포인트를 입력합니다 (기본값 `https://api.openai.com/v1`).
-   - OpenAI API는 브라우저 직접 호출이 CORS로 차단되는 경우가 있어, 브라우저 호출을 지원하는 **OpenRouter**(`https://openrouter.ai/api/v1`)나 **자신의 프록시 서버**를 권장합니다.
-3. **API 키**와 **모델**(예: `gpt-4o-mini`)을 입력하고 [저장]을 누릅니다.
-4. 모드 표시가 `🤖 LLM 모드`로 바뀌면 분석·대화가 LLM으로 동작합니다.
+2. **제공자**를 선택합니다.
+   - **OpenAI 호환** (OpenAI · OpenRouter 등): **API 주소**에 OpenAI 호환 엔드포인트 입력 (기본값 `https://api.openai.com/v1`). OpenAI API는 브라우저 직접 호출이 CORS로 차단되는 경우가 있어, 브라우저 호출을 지원하는 **OpenRouter**(`https://openrouter.ai/api/v1`)나 **자신의 프록시 서버**를 권장합니다.
+   - **Google Gemini**: 제공자를 Gemini로 바꾸면 API 주소·모델 기본값이 자동으로 `https://generativelanguage.googleapis.com/v1beta` / `gemini-2.5-flash`로 바뀝니다. API 키(`AIza...`)는 [Google AI Studio](https://aistudio.google.com/)에서 발급받을 수 있으며, Gemini는 브라우저 직접 호출(CORS)이 지원됩니다.
+3. **API 키**와 **모델**(예: `gpt-4o-mini`, `gemini-2.5-flash`)을 입력하고 [저장]을 누릅니다.
+4. 모드 표시가 `🤖 LLM 모드`로 바뀌면 분석·대화·주간 리포트가 LLM으로 동작합니다.
    - 키는 **이 브라우저의 localStorage에만 저장**되며 외부로 전송되지 않습니다.
 
 ### 오프라인 테스트
@@ -69,5 +70,9 @@ mock-llm-server.js  — LLM 연동 테스트용 목 서버 (개발용)
 node mock-llm-server.js
 ```
 
-실행 후 설정에서 API 주소를 `http://127.0.0.1:4180/v1`, 키·모델은 아무 값으로 지정하면
-실제 API 키 없이 LLM 모드 전체 흐름(분석·스트리밍 대화·오류 폴백)을 테스트할 수 있습니다.
+실행 후 설정에서 아래처럼 지정하면 실제 API 키 없이 LLM 모드 전체 흐름을 테스트할 수 있습니다.
+
+- OpenAI 호환: API 주소 `http://127.0.0.1:4180/v1`, 모델 `mock-model`, 키 아무 값
+- Gemini: 제공자 **Gemini** 선택, API 주소 `http://127.0.0.1:4180/v1beta`, 모델 `mock-gemini`, 키 아무 값
+
+목 서버는 두 제공자의 분석·스트리밍 대화·주간 리포트 응답을 모두 흉내 냅니다.

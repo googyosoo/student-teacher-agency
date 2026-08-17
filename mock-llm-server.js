@@ -1,9 +1,10 @@
 /* ============================================================
    목 LLM 서버 (개발·테스트용)
-   OpenAI 호환 /chat/completions 엔드포인트를 흉내 냅니다.
-   사이트의 LLM 설정에서 API 주소를
-   http://127.0.0.1:4180/v1 , 키는 아무 값, 모델은 mock-model 로 지정하면
-   실제 키 없이도 LLM 모드 전체 흐름을 테스트할 수 있습니다.
+   OpenAI 호환 /chat/completions + Google Gemini 호환 엔드포인트를 흉내 냅니다.
+
+   - OpenAI:  API 주소 http://127.0.0.1:4180/v1, 키 아무 값, 모델 mock-model
+   - Gemini:  API 주소 http://127.0.0.1:4180/v1beta, 키 아무 값, 모델 mock-gemini
+   실제 키 없이도 LLM 모드 전체 흐름(분석·스트리밍 대화·주간 리포트)을 테스트할 수 있습니다.
 
    실행: node mock-llm-server.js
    ============================================================ */
@@ -32,9 +33,40 @@ const MOCK_CHAT =
   "학생 선택권을 늘리려면 주제·방법·발표 형식 중 하나는 학생이 고르게 해보세요. " +
   "작은 선택이 주인의식을 키웁니다. 특히 조용한 학생에게는 2~3개의 선택지 중 하나를 고르게 하는 것부터 시작해 보세요.";
 
+const MOCK_GEMINI = {
+  candidates: [{ content: { role: "model", parts: [{ text: JSON.stringify(MOCK_ANALYSIS) }] } }],
+  usageMetadata: { promptTokenCount: 120, candidatesTokenCount: 96, totalTokenCount: 216 },
+};
+
+function geminiStream(res) {
+  // Gemini streamGenerateContent?alt=sse — 각 청크는 누적 텍스트를 담습니다
+  const chunks = [...MOCK_CHAT];
+  res.writeHead(200, { "Content-Type": "text/event-stream" });
+  let acc = "";
+  let i = 0;
+  const timer = setInterval(() => {
+    if (i >= chunks.length) {
+      clearInterval(timer);
+      res.end();
+      return;
+    }
+    acc += chunks[i];
+    const payload = JSON.stringify({
+      candidates: [{ content: { parts: [{ text: acc }] } }],
+    });
+    res.write(`data: ${payload}\n\n`);
+    i += 1;
+  }, 15);
+}
+
+function sendJson(res, obj) {
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(obj));
+}
+
 const server = http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-goog-api-key");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
 
   if (req.method === "OPTIONS") {
@@ -43,7 +75,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method !== "POST" || !req.url.includes("/chat/completions")) {
+  if (req.method !== "POST") {
     res.writeHead(404);
     res.end("not found");
     return;
@@ -57,40 +89,56 @@ const server = http.createServer((req, res) => {
       parsed = JSON.parse(body);
     } catch { /* ignore */ }
 
-    if (parsed.stream) {
-      const chunks = [...MOCK_CHAT];
-      res.writeHead(200, { "Content-Type": "text/event-stream" });
-      let i = 0;
-      const timer = setInterval(() => {
-        if (i >= chunks.length) {
-          clearInterval(timer);
-          res.write("data: [DONE]\n\n");
-          res.end();
-          return;
-        }
-        const payload = JSON.stringify({ choices: [{ delta: { content: chunks[i] } }] });
-        res.write(`data: ${payload}\n\n`);
-        i += 1;
-      }, 15);
+    // ---- Google Gemini 호환 ----
+    const urlLower = req.url.toLowerCase();
+    if (urlLower.includes(":streamgeneratecontent")) {
+      geminiStream(res);
+      return;
+    }
+    if (urlLower.includes(":generatecontent")) {
+      sendJson(res, MOCK_GEMINI);
       return;
     }
 
-    const payload = {
-      id: "mock-llm",
-      object: "chat.completion",
-      created: Date.now(),
-      model: parsed.model || "mock-model",
-      choices: [
-        {
-          index: 0,
-          message: { role: "assistant", content: JSON.stringify(MOCK_ANALYSIS) },
-          finish_reason: "stop",
-        },
-      ],
-      usage: { prompt_tokens: 120, completion_tokens: 96, total_tokens: 216 },
-    };
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(payload));
+    // ---- OpenAI 호환 ----
+    if (req.url.includes("/chat/completions")) {
+      if (parsed.stream) {
+        const chunks = [...MOCK_CHAT];
+        res.writeHead(200, { "Content-Type": "text/event-stream" });
+        let i = 0;
+        const timer = setInterval(() => {
+          if (i >= chunks.length) {
+            clearInterval(timer);
+            res.write("data: [DONE]\n\n");
+            res.end();
+            return;
+          }
+          const payload = JSON.stringify({ choices: [{ delta: { content: chunks[i] } }] });
+          res.write(`data: ${payload}\n\n`);
+          i += 1;
+        }, 15);
+        return;
+      }
+
+      sendJson(res, {
+        id: "mock-llm",
+        object: "chat.completion",
+        created: Date.now(),
+        model: parsed.model || "mock-model",
+        choices: [
+          {
+            index: 0,
+            message: { role: "assistant", content: JSON.stringify(MOCK_ANALYSIS) },
+            finish_reason: "stop",
+          },
+        ],
+        usage: { prompt_tokens: 120, completion_tokens: 96, total_tokens: 216 },
+      });
+      return;
+    }
+
+    res.writeHead(404);
+    res.end("not found");
   });
 });
 

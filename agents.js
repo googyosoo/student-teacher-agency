@@ -195,15 +195,26 @@ document.getElementById("journalExport").addEventListener("click", () => {
    ============================================================ */
 const LLM_KEY = "agency-llm-config";
 const LLM_DEFAULTS = {
+  provider: "openai",
   baseUrl: "https://api.openai.com/v1",
   model: "gpt-4o-mini",
   apiKey: "",
 };
 
+const PROVIDER_DEFAULTS = {
+  openai: { baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini" },
+  gemini: { baseUrl: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-2.5-flash" },
+};
+
+const PROVIDER_LABELS = { openai: "OpenAI 호환", gemini: "Google Gemini" };
+
 function loadLLMConfig() {
   try {
     const raw = localStorage.getItem(LLM_KEY);
-    return { ...LLM_DEFAULTS, ...(raw ? JSON.parse(raw) : {}) };
+    const cfg = { ...LLM_DEFAULTS, ...(raw ? JSON.parse(raw) : {}) };
+    // 이전 저장본(provider 없음)은 openai로 간주
+    if (!cfg.provider) cfg.provider = "openai";
+    return cfg;
   } catch {
     return { ...LLM_DEFAULTS };
   }
@@ -216,6 +227,30 @@ function saveLLMConfig(cfg) {
 function llmEnabled() {
   const c = loadLLMConfig();
   return Boolean(c.baseUrl && c.apiKey);
+}
+
+/* Gemini: OpenAI 메시지 배열을 Gemini contents로 변환 */
+function messagesToGemini(messages) {
+  const systemParts = [];
+  const contents = [];
+  messages.forEach((m) => {
+    if (m.role === "system") {
+      systemParts.push({ text: m.content });
+    } else {
+      contents.push({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] });
+    }
+  });
+  return { systemInstruction: systemParts.length ? { parts: systemParts } : undefined, contents };
+}
+
+/* Gemini / OpenAI 응답에서 텍스트 추출 */
+function llmText(data) {
+  if (!data) return "";
+  if (data.choices?.[0]?.message?.content != null) return data.choices[0].message.content;
+  if (data.candidates?.[0]?.content?.parts) {
+    return data.candidates[0].content.parts.map((p) => p.text || "").join("");
+  }
+  return "";
 }
 
 const COACH_SYSTEM_PROMPT = `너는 한국의 교육 전문가이자 '성찰 코치 에이전트'다. 교사의 수업 성찰일지를 읽고, 학생주도성(목소리, 선택권, 소유권·책임, 자기성찰, 안전한 실패, 비계·지원) 관점에서 깊이 있는 피드백을 준다.
@@ -233,21 +268,40 @@ const COACH_SYSTEM_PROMPT = `너는 한국의 교육 전문가이자 '성찰 코
 async function llmComplete(messages, { stream = false } = {}) {
   const cfg = loadLLMConfig();
   const base = cfg.baseUrl.replace(/\/+$/, "");
+  const isGemini = cfg.provider === "gemini";
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 90000);
   try {
-    const res = await fetch(`${base}/chat/completions`, {
-      method: "POST",
-      headers: {
+    let url, headers, body;
+    if (isGemini) {
+      const method = stream ? "streamGenerateContent?alt=sse" : "generateContent";
+      url = `${base}/models/${encodeURIComponent(cfg.model)}:${method}`;
+      headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": cfg.apiKey,
+      };
+      const g = messagesToGemini(messages);
+      body = JSON.stringify({
+        ...g,
+        generationConfig: { temperature: 0.7 },
+      });
+    } else {
+      url = `${base}/chat/completions`;
+      headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${cfg.apiKey}`,
-      },
-      body: JSON.stringify({ model: cfg.model, messages, temperature: 0.7, stream }),
+      };
+      body = JSON.stringify({ model: cfg.model, messages, temperature: 0.7, stream });
+    }
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body,
       signal: controller.signal,
     });
     if (!res.ok) {
       const err = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status}${err ? " · " + err.slice(0, 160) : ""}`);
+      throw new Error(`HTTP ${res.status}${err ? " · " + err.slice(0, 200) : ""}`);
     }
     return stream ? res : res.json();
   } finally {
@@ -276,7 +330,10 @@ function friendlyError(err) {
   if (/failed to fetch|networkerror|load failed|cors/i.test(m)) {
     return "브라우저에서 API에 접속할 수 없습니다. (CORS·네트워크 차단) OpenAI API는 브라우저 직접 호출을 막는 경우가 있어, OpenRouter(openrouter.ai) 또는 자신의 프록시를 사용하거나 규칙 모드로 실행해 주세요.";
   }
-  if (/401/.test(m)) return "인증 실패(401)입니다. API 키를 확인해 주세요.";
+  if (/401|403|api key not valid|invalid key/i.test(m)) {
+    return "인증 실패입니다. API 키를 확인해 주세요. (Gemini 키는 AIza... 형식이며, 올바른 프로젝트에 대해 생성되었는지 확인하세요)";
+  }
+  if (/404/.test(m)) return "요청한 엔드포인트나 모델을 찾을 수 없습니다(404). 제공자·모델명·API 주소를 확인해 주세요.";
   if (/429/.test(m)) return "요청 한도 초과(429)입니다. 잠시 후 다시 시도하거나 다른 모델을 사용해 보세요.";
   if (/abort/i.test(m)) return "요청 시간이 초과되었습니다. 다시 시도해 주세요.";
   return m;
@@ -290,7 +347,7 @@ async function analyzeWithLLM(text) {
     { role: "user", content: `아래는 교사의 수업 성찰일지다. 분석해줘.\n\n${text}` },
   ]);
   const latency = Math.round(performance.now() - t0);
-  const content = data.choices?.[0]?.message?.content ?? "";
+  const content = llmText(data);
   const parsed = extractJSON(content);
   if (!parsed) throw new Error("LLM 응답을 JSON으로 해석하지 못했습니다. (모델에 따라 JSON 출력을 지원하지 않을 수 있습니다)");
   return { parsed, latency, model: cfg.model, raw: content };
@@ -316,9 +373,14 @@ async function streamChat(messages, onDelta) {
       if (payload === "[DONE]") continue;
       try {
         const chunk = JSON.parse(payload);
-        const delta = chunk.choices?.[0]?.delta?.content ?? "";
+        // OpenAI: choices[0].delta.content (증분) / Gemini: candidates[0].content.parts[0].text (누적)
+        let delta = chunk.choices?.[0]?.delta?.content ?? "";
+        if (!delta && chunk.candidates?.[0]?.content?.parts) {
+          delta = chunk.candidates[0].content.parts.map((p) => p.text || "").join("");
+        }
         if (delta) {
-          full += delta;
+          if (delta.startsWith(full)) full = delta; // 누적형(Gemini)
+          else full += delta; // 증분형(OpenAI)
           onDelta(full);
         }
       } catch { /* 분할된 청크 무시 */ }
@@ -705,6 +767,7 @@ chatForm.addEventListener("submit", (e) => {
 });
 
 /* -------- LLM 설정 UI -------- */
+const llmProviderEl = document.getElementById("llmProvider");
 const llmBaseUrlEl = document.getElementById("llmBaseUrl");
 const llmApiKeyEl = document.getElementById("llmApiKey");
 const llmModelEl = document.getElementById("llmModel");
@@ -713,6 +776,7 @@ const llmStatusEl = document.getElementById("llmStatus");
 
 function updateLLMUI() {
   const cfg = loadLLMConfig();
+  llmProviderEl.value = cfg.provider || "openai";
   llmBaseUrlEl.value = cfg.baseUrl;
   llmApiKeyEl.value = cfg.apiKey;
   llmModelEl.value = cfg.model;
@@ -720,14 +784,33 @@ function updateLLMUI() {
   llmModePill.textContent = enabled ? "🤖 LLM 모드" : "🧩 규칙 모드";
   llmModePill.classList.toggle("llm-on", enabled);
   llmStatusEl.textContent = enabled
-    ? `✓ 연결 대상: ${cfg.model} · ${cfg.baseUrl}`
-    : "미설정 — 규칙 기반 분석을 사용합니다. OpenAI 호환 API를 연결하면 더 깊은 분석이 가능합니다.";
+    ? `✓ 연결 대상: ${PROVIDER_LABELS[cfg.provider] || cfg.provider} · ${cfg.model} · ${cfg.baseUrl}`
+    : `미설정 — 규칙 기반 분석을 사용합니다. OpenAI 호환 API 또는 Google Gemini를 연결하면 더 깊은 분석이 가능합니다.`;
 }
+
+// 제공자 전환 시 기본 주소·모델 자동 제안
+llmProviderEl.addEventListener("change", () => {
+  const p = llmProviderEl.value;
+  const def = PROVIDER_DEFAULTS[p] || PROVIDER_DEFAULTS.openai;
+  if (!llmBaseUrlEl.value.trim() || Object.values(PROVIDER_DEFAULTS).some((d) => d.baseUrl === llmBaseUrlEl.value.trim())) {
+    llmBaseUrlEl.value = def.baseUrl;
+  }
+  if (!llmModelEl.value.trim() || Object.values(PROVIDER_DEFAULTS).some((d) => d.model === llmModelEl.value.trim())) {
+    llmModelEl.value = def.model;
+  }
+  llmBaseUrlEl.placeholder = p === "gemini" ? "https://generativelanguage.googleapis.com/v1beta" : "https://api.openai.com/v1";
+  llmModelEl.placeholder = p === "gemini" ? "gemini-2.5-flash" : "gpt-4o-mini";
+  llmStatusEl.textContent =
+    p === "gemini"
+      ? "Gemini: API 키(AIza...)는 Google AI Studio(ai.google.dev)에서 발급받을 수 있습니다."
+      : "OpenAI 호환: 키(sk-...)는 제공자 콘솔에서 발급받을 수 있습니다.";
+});
 
 document.getElementById("llmSave").addEventListener("click", () => {
   saveLLMConfig({
-    baseUrl: llmBaseUrlEl.value.trim() || LLM_DEFAULTS.baseUrl,
-    model: llmModelEl.value.trim() || LLM_DEFAULTS.model,
+    provider: llmProviderEl.value,
+    baseUrl: llmBaseUrlEl.value.trim() || PROVIDER_DEFAULTS[llmProviderEl.value].baseUrl,
+    model: llmModelEl.value.trim() || PROVIDER_DEFAULTS[llmProviderEl.value].model,
     apiKey: llmApiKeyEl.value.trim(),
   });
   updateLLMUI();
@@ -1034,7 +1117,7 @@ async function weekSummaryWithLLM(entries) {
     { role: "user", content: `아래는 최근 성찰일지들이다. 주간 리포트를 작성해줘.\n\n${texts}` },
   ]);
   const latency = Math.round(performance.now() - t0);
-  const parsed = extractJSON(data.choices?.[0]?.message?.content ?? "");
+  const parsed = extractJSON(llmText(data));
   if (!parsed) throw new Error("LLM 응답을 JSON으로 해석하지 못했습니다.");
   const rule = ruleWeekSummary(entries);
   return {

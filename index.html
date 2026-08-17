@@ -355,12 +355,18 @@
               </div>
               <details class="llm-settings">
                 <summary>⚙️ LLM 연동 설정</summary>
-                <p class="mini-note">OpenAI 호환 API(OpenAI, OpenRouter, 로컬 프록시 등)를 연결하면 성찰 코치가 LLM으로 분석하고 대화합니다. 키는 <strong>이 브라우저에만 저장</strong>됩니다. 미입력 시 규칙 기반 모드로 동작합니다.</p>
-                <label class="field-label"><span>API 주소 (OpenAI 호환)</span>
+                <p class="mini-note">OpenAI 호환 API(OpenAI, OpenRouter, 로컬 프록시) 또는 <strong>Google Gemini</strong>를 연결하면 성찰 코치가 LLM으로 분석하고 대화합니다. 키는 <strong>이 브라우저에만 저장</strong>됩니다. 미입력 시 규칙 기반 모드로 동작합니다.</p>
+                <label class="field-label"><span>제공자</span>
+                  <select id="llmProvider">
+                    <option value="openai">OpenAI 호환 (OpenAI · OpenRouter 등)</option>
+                    <option value="gemini">Google Gemini</option>
+                  </select>
+                </label>
+                <label class="field-label"><span>API 주소</span>
                   <input type="text" id="llmBaseUrl" placeholder="https://api.openai.com/v1" spellcheck="false" />
                 </label>
                 <label class="field-label"><span>API 키</span>
-                  <input type="password" id="llmApiKey" placeholder="sk-..." autocomplete="off" />
+                  <input type="password" id="llmApiKey" placeholder="sk-... 또는 AIza..." autocomplete="off" />
                 </label>
                 <label class="field-label"><span>모델</span>
                   <input type="text" id="llmModel" placeholder="gpt-4o-mini" spellcheck="false" />
