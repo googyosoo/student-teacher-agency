@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>주도성의 조화 — 학생주도성과 교사주도성</title>
+  <meta name="description" content="학생주도성의 중요성과 교사주도성과의 조화를 배우고 실천하는 공간. 학생과 교사 모두를 위한 사이트입니다." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ===== 헤더 / 네비게이션 ===== -->
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a href="#top" class="brand">
+        <span class="brand-mark">조</span>
+        <span class="brand-text">
+          <strong>주도성의 조화</strong>
+          <small>학생과 교사가 함께 만드는 배움</small>
+        </span>
+      </a>
+      <nav class="main-nav" id="mainNav" aria-label="주요 메뉴">
+        <a href="#concept">학생주도성이란</a>
+        <a href="#why">왜 중요한가</a>
+        <a href="#harmony">조화의 원리</a>
+        <a href="#spaces">역할별 공간</a>
+        <a href="#studio">교사 스튜디오</a>
+        <a href="#check">주도성 자가진단</a>
+        <a href="#faq">자주 묻는 질문</a>
+        <a href="#" class="nav-toggle" id="navClose" aria-label="메뉴 닫기">✕</a>
+      </nav>
+      <button class="nav-toggle menu-open" id="navOpen" aria-label="메뉴 열기" aria-expanded="false">☰</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== 히어로 ===== -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="hero-eyebrow reveal">학생과 교사, 둘의 목소리가 만나는 곳</p>
+          <h1 class="hero-title reveal">
+            배움의 주인은<br />
+            <span class="grad-student">학생</span>이지만,<br />
+            길을 여는 손길은 <span class="grad-teacher">교사</span>의 몫입니다.
+          </h1>
+          <p class="hero-sub reveal">
+            학생주도성은 학생이 자신의 배움에 주체가 되는 힘입니다.
+            그러나 그것은 교사를 뒤로한 외로운 도전이 아니라,
+            교사의 안내와 신뢰가 어우러질 때 비로소 꽃을 피웁니다.
+          </p>
+          <div class="hero-actions reveal">
+            <a href="#spaces" class="btn btn-student" data-role="student">👩‍🎓 학생으로 시작하기</a>
+            <a href="#spaces" class="btn btn-teacher" data-role="teacher">👩‍🏫 교사로 시작하기</a>
+          </div>
+        </div>
+        <div class="hero-visual reveal" aria-hidden="true">
+          <div class="orbit orbit-a"></div>
+          <div class="orbit orbit-b"></div>
+          <div class="seed seed-student">
+            <span class="seed-icon">🌱</span>
+            <span class="seed-label">학생의 호기심</span>
+          </div>
+          <div class="seed seed-teacher">
+            <span class="seed-icon">🤝</span>
+            <span class="seed-label">교사의 안내</span>
+          </div>
+          <div class="seed seed-core">
+            <span class="seed-icon">✨</span>
+            <span class="seed-label">주도적 배움</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-wave" aria-hidden="true">
+        <svg viewBox="0 0 1440 90" preserveAspectRatio="none"><path d="M0,50 C240,95 480,0 720,35 C960,70 1200,15 1440,55 L1440,90 L0,90 Z" fill="var(--bg)"/></svg>
+      </div>
+    </section>
+
+    <!-- ===== 개념 ===== -->
+    <section class="section" id="concept">
+      <div class="container">
+        <p class="section-tag reveal">CONCEPT · 개념</p>
+        <h2 class="section-title reveal">학생주도성, 무엇인가요?</h2>
+        <p class="section-lead reveal">
+          학생주도성(Student Agency)은 OECD Education 2030이 강조한 핵심 역량으로,
+          학생이 자신의 학습 목표를 세우고, 선택하고, 실천하며, 스스로 성찰하는 힘을 말합니다.
+        </p>
+        <div class="card-grid three">
+          <article class="card reveal">
+            <div class="card-icon">🗣️</div>
+            <h3>목소리 <em>Voice</em></h3>
+            <p>배움의 방향에 대해 묻고, 의견을 말하고, 결정에 참여합니다. “왜 배우는가”에 대한 질문이 자유로운 공간이 필요합니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🧭</div>
+            <h3>선택 <em>Choice</em></h3>
+            <p>무엇을, 어떻게, 얼마나 깊이 배울지 선택합니다. 선택은 책임의 출발점이며, 책임은 성장의 밑거름입니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🏠</div>
+            <h3>소유권 <em>Ownership</em></h3>
+            <p>“나의 배움”이라는 주인의식을 갖습니다. 실패도 과정도 모두 자신의 것이 될 때, 배움은 평생 이어집니다.</p>
+          </article>
+        </div>
+        <blockquote class="quote reveal">
+          “학생주도성은 ‘교사가 시키지 않아도 하는 것’이 아니라,
+          <strong>‘교사와 함께 자신의 배움을 설계하는 힘’</strong>입니다.”
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- ===== 왜 중요한가 ===== -->
+    <section class="section section-alt" id="why">
+      <div class="container">
+        <p class="section-tag reveal">WHY · 중요성</p>
+        <h2 class="section-title reveal">왜 지금, 학생주도성인가요?</h2>
+        <p class="section-lead reveal">
+          미래는 답이 정해진 문제가 아니라, 스스로 질문을 던지는 사람을 기다립니다.
+          학생주도성은 단순한 학습 전략이 아니라 삶의 태도가 됩니다.
+        </p>
+        <div class="card-grid three">
+          <article class="card reveal">
+            <div class="card-num">01</div>
+            <h3>내재적 동기를 키웁니다</h3>
+            <p>스스로 선택한 목표는 외부의 보상 없이도 나를 움직입니다. ‘해야 하는 공부’에서 ‘하고 싶은 배움’으로 바뀝니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-num">02</div>
+            <h3>깊은 이해를 만듭니다</h3>
+            <p>질문하고, 시도하고, 틀리고, 다시 묻는 과정을 통해 단순 암기가 아닌 진짜 이해가 자랍니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-num">03</div>
+            <h3>평생학습의 기초가 됩니다</h3>
+            <p>학교를 떠난 뒤에도 배움은 계속됩니다. 스스로 배우는 법을 아는 사람은 어떤 시대에도 흔들리지 않습니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-num">04</div>
+            <h3>자기효능감을 높입니다</h3>
+            <p>“내가 해낼 수 있다”는 믿음은 성취 경험에서 나옵니다. 주도적 경험이 쌓일수록 자신을 믿는 힘이 자랍니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-num">05</div>
+            <h3>책임 있는 선택을 가르칩니다</h3>
+            <p>선택에는 결과가 따릅니다. 주도성은 자유와 책임이 함께 온다는 것을 몸으로 배우는 과정입니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-num">06</div>
+            <h3>함께 사는 시민으로 자랍니다</h3>
+            <p>자신의 목소리를 내는 법을 배운 학생은, 타인의 목소리도 존중하는 민주적 시민으로 성장합니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 조화의 원리 ===== -->
+    <section class="section" id="harmony">
+      <div class="container">
+        <p class="section-tag reveal">HARMONY · 조화</p>
+        <h2 class="section-title reveal">학생주도성과 교사주도성은<br />경쟁이 아니라 조화입니다</h2>
+        <p class="section-lead reveal">
+          학생주도성을 키우는 수업은 교사가 물러나는 수업이 아닙니다.
+          비계(scaffolding)처럼 교사의 안내가 학생의 성장을 받치고,
+          학생이 설 수 있을 때 그 손길은 서서히 거둬집니다.
+          이것이 <strong>근접발달영역(ZPD)</strong>의 지혜입니다.
+        </p>
+
+        <div class="balance-card reveal">
+          <div class="balance-copy">
+            <h3>균형을 움직여 보세요</h3>
+            <p>수업의 성격에 따라 교사와 학생의 주도 비중은 달라져야 합니다. 아래 막대를 움직여 그 균형을 느껴보세요.</p>
+            <div class="slider-row">
+              <span class="pill pill-student">학생주도성</span>
+              <input type="range" id="balanceSlider" min="0" max="100" value="50" aria-label="학생·교사 주도성 균형 조절" />
+              <span class="pill pill-teacher">교사주도성</span>
+            </div>
+            <div class="balance-scale" aria-hidden="true">
+              <div class="scale-fill" id="scaleFill"></div>
+              <span class="scale-arrow" id="scaleArrow">▼</span>
+            </div>
+          </div>
+          <div class="balance-result" id="balanceResult">
+            <span class="balance-face">🤝</span>
+            <h3 id="balanceTitle">함께 설계하는 배움</h3>
+            <p id="balanceDesc">교사는 방향을 제시하고 학생은 선택과 실행을 맡습니다. 질문이 오가는 대화형 수업이 좋은 예입니다.</p>
+          </div>
+        </div>
+
+        <div class="card-grid three">
+          <article class="card reveal">
+            <div class="card-icon">🧱</div>
+            <h3>안내는 개입이 아닙니다</h3>
+            <p>교사의 역할은 정답을 주는 것이 아니라, 학생이 답에 닿도록 발판을 놓는 일입니다. 질문, 자료, 기회가 그 발판입니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🌉</div>
+            <h3>조화는 단계를 따릅니다</h3>
+            <p>처음엔 교사가 더 많이 이끌고, 학생의 힘이 자랄수록 주도권을 넘겨줍니다. 같은 교실 안에서도 학생마다 다른 단계가 있을 수 있습니다.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card-icon">🔁</div>
+            <h3>실패를 안전하게 만듭니다</h3>
+            <p>교사가 안전망이 되어 줄 때, 학생은 두려움 없이 시도합니다. “틀려도 괜찮아”라는 말은 가장 강력한 비계입니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 역할별 공간 ===== -->
+    <section class="section section-alt" id="spaces">
+      <div class="container">
+        <p class="section-tag reveal">FOR YOU · 역할별 공간</p>
+        <h2 class="section-title reveal">당신의 자리에서 시작해 보세요</h2>
+        <p class="section-lead reveal">학생과 교사, 각자의 자리에서 오늘 실천할 수 있는 작은 걸음들을 모았습니다.</p>
+
+        <div class="tabs reveal">
+          <button class="tab-btn is-active" data-tab="student" role="tab" aria-selected="true">👩‍🎓 학생을 위한 공간</button>
+          <button class="tab-btn" data-tab="teacher" role="tab" aria-selected="false">👩‍🏫 교사를 위한 공간</button>
+        </div>
+
+        <!-- 학생 탭 -->
+        <div class="tab-panel is-active" id="panel-student" role="tabpanel">
+          <div class="card-grid two">
+            <article class="card">
+              <div class="card-icon">🎯</div>
+              <h3>오늘부터 실천하는 5가지</h3>
+              <ul class="check-list">
+                <li>수업 전 “오늘 나는 무엇을 배우고 싶은가?” 한 줄 적기</li>
+                <li>모르는 것이 있으면 손을 들고 질문하기</li>
+                <li>과제를 할 때 내 방식대로 방법을 하나 골라보기</li>
+                <li>하루를 마치며 “오늘 배운 것 중 가장 흥미로웠던 것” 기록하기</li>
+                <li>선생님께 “이렇게 배우면 더 좋을 것 같아요”라고 제안해 보기</li>
+              </ul>
+            </article>
+            <article class="card">
+              <div class="card-icon">🧠</div>
+              <h3>주도적으로 배우는 질문 3가지</h3>
+              <ul class="check-list">
+                <li><strong>목표:</strong> “이번 주에 나는 무엇을 배우고 싶나?”</li>
+                <li><strong>방법:</strong> “어떻게 하면 가장 잘 배울 수 있을까?”</li>
+                <li><strong>성찰:</strong> “오늘 배운 것 중 무엇이 좋았고, 무엇을 바꾸면 좋을까?”</li>
+              </ul>
+              <p class="mini-note">💡 질문은 주도성의 문을 여는 열쇠입니다. 질문을 만드는 연습부터 시작하세요.</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- 교사 탭 -->
+        <div class="tab-panel" id="panel-teacher" role="tabpanel" hidden>
+          <div class="card-grid two">
+            <article class="card">
+              <div class="card-icon">🛠️</div>
+              <h3>수업에서 주도성을 설계하는 방법</h3>
+              <ul class="check-list">
+                <li><strong>선택권 주기:</strong> 주제·방법·발표 형식 중 하나라도 학생이 고르게 하기</li>
+                <li><strong>질문 비계:</strong> 답을 주기 전에 “왜?”, “그렇게 생각한 이유는?” 되묻기</li>
+                <li><strong>목소리 반영:</strong> 학기 초에 “배우고 싶은 것”을 물어 수업에 반영하기</li>
+                <li><strong>성찰 시간:</strong> 수업의 마지막 3분을 “배움 일지”로 남기기</li>
+                <li><strong>안전한 실패:</strong> 실패를 공유하고 함께 배우는 문화 만들기</li>
+              </ul>
+            </article>
+            <article class="card">
+              <div class="card-icon">⚖️</div>
+              <h3>교사주도성, 잊지 말아야 할 것</h3>
+              <ul class="check-list">
+                <li>교사의 전문성과 안내는 조화의 축입니다. 주도권을 넘긴다고 책임을 넘기는 것은 아닙니다.</li>
+                <li>학생의 준비도에 따라 주도권의 크기는 달라져야 합니다.</li>
+                <li>“주도성”이라는 이름으로 방치되는 일이 없도록, 비계는 항상 곁에 있어야 합니다.</li>
+                <li>교사 자신도 배움의 주체입니다. 함께 성장하는 태도가 가장 좋은 본보기입니다.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 교사 성찰 스튜디오 ===== -->
+    <section class="section" id="studio">
+      <div class="container">
+        <p class="section-tag reveal">STUDIO · 교사 성찰 스튜디오</p>
+        <h2 class="section-title reveal">교사를 위한 성찰과 설계 공간</h2>
+        <p class="section-lead reveal">
+          수업을 기록하고, AI 코치 에이전트의 도움으로 깊이 돌아보고, 학생주도성 원리를 담은 수업을 설계해 보세요.
+          기록은 <strong>이 브라우저에만 저장</strong>되며 언제든 텍스트로 내보낼 수 있습니다.
+        </p>
+
+        <div class="sub-tabs reveal" role="tablist">
+          <button class="sub-tab is-active" data-stab="journal" role="tab" aria-selected="true">📓 성찰일지</button>
+          <button class="sub-tab" data-stab="coach" role="tab" aria-selected="false">🤖 AI 성찰 코치</button>
+          <button class="sub-tab" data-stab="designer" role="tab" aria-selected="false">🛠️ 수업 설계 어시스턴트</button>
+          <button class="sub-tab" data-stab="report" role="tab" aria-selected="false">📊 주간 리포트</button>
+        </div>
+
+        <!-- 성찰일지 -->
+        <div class="sub-panel is-active" id="sub-journal" role="tabpanel">
+          <div class="journal-layout">
+            <div class="journal-form card">
+              <h3>✍️ 새 성찰 기록</h3>
+              <form id="journalForm">
+                <div class="field-row">
+                  <label class="field-label"><span>날짜</span>
+                    <input type="date" id="jDate" required />
+                  </label>
+                  <label class="field-label"><span>수업·제목</span>
+                    <input type="text" id="jTitle" placeholder="예: 3학년 사회 · 토론 수업" />
+                  </label>
+                </div>
+                <label class="field-label"><span>오늘의 수업 상황 (필수)</span>
+                  <textarea id="jSituation" required placeholder="무엇을 배웠고, 무엇을 했나요? 학생들의 반응은 어땠나요?"></textarea>
+                </label>
+                <label class="field-label"><span>잘된 점</span>
+                  <textarea id="jGood" placeholder="오늘 잘되었다고 느낀 순간을 적어보세요."></textarea>
+                </label>
+                <label class="field-label"><span>어려웠던 점 · 고민</span>
+                  <textarea id="jHard" placeholder="막혔던 순간, 아쉬웠던 부분을 솔직하게."></textarea>
+                </label>
+                <label class="field-label"><span>다음에 시도할 것</span>
+                  <textarea id="jNext" placeholder="다음 수업에서 바꿔볼 한 가지를 적어보세요."></textarea>
+                </label>
+                <div class="form-actions">
+                  <button class="btn btn-teacher" type="submit">💾 기록 저장</button>
+                  <button class="btn btn-ghost" type="button" id="journalExport">📤 일지 내보내기</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="journal-list">
+              <div class="journal-stats" id="journalStats"></div>
+              <div id="journalEntries"></div>
+              <p class="journal-empty" id="journalEmpty">아직 기록이 없습니다. 첫 성찰을 남겨보세요. 🌱</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 성찰 코치 -->
+        <div class="sub-panel" id="sub-coach" role="tabpanel" hidden>
+          <div class="coach-layout">
+            <div class="coach-side card">
+              <h3>🤖 성찰 코치 에이전트</h3>
+              <p class="mini-note">일지를 골라 분석하거나, 수업 후 남긴 메모를 바로 붙여넣어 보세요. 에이전트가 분석하고 질문과 제안을 만들어 드립니다. 아래에서 LLM을 연결하면 더 깊은 분석과 자연스러운 대화가 가능합니다.</p>
+              <label class="field-label"><span>저장된 일지에서 분석</span>
+                <select id="coachEntrySelect">
+                  <option value="">— 일지를 선택하세요 —</option>
+                </select>
+              </label>
+              <label class="field-label"><span>또는 텍스트 붙여넣기</span>
+                <textarea id="coachText" placeholder="오늘 수업에서 있었던 일, 학생들의 반응, 나의 느낌을 적어보세요..."></textarea>
+              </label>
+              <div class="coach-run-row">
+                <button class="btn btn-teacher" id="coachRun" type="button">🚀 에이전트 실행</button>
+                <span class="mode-pill" id="llmModePill">🧩 규칙 모드</span>
+              </div>
+              <details class="llm-settings">
+                <summary>⚙️ LLM 연동 설정</summary>
+                <p class="mini-note">OpenAI 호환 API(OpenAI, OpenRouter, 로컬 프록시 등)를 연결하면 성찰 코치가 LLM으로 분석하고 대화합니다. 키는 <strong>이 브라우저에만 저장</strong>됩니다. 미입력 시 규칙 기반 모드로 동작합니다.</p>
+                <label class="field-label"><span>API 주소 (OpenAI 호환)</span>
+                  <input type="text" id="llmBaseUrl" placeholder="https://api.openai.com/v1" spellcheck="false" />
+                </label>
+                <label class="field-label"><span>API 키</span>
+                  <input type="password" id="llmApiKey" placeholder="sk-..." autocomplete="off" />
+                </label>
+                <label class="field-label"><span>모델</span>
+                  <input type="text" id="llmModel" placeholder="gpt-4o-mini" spellcheck="false" />
+                </label>
+                <div class="form-actions">
+                  <button class="mini-btn" id="llmSave" type="button">💾 저장</button>
+                  <button class="mini-btn danger" id="llmClear" type="button">초기화</button>
+                </div>
+                <p class="llm-status" id="llmStatus"></p>
+              </details>
+              <div class="agent-log" id="agentLog" hidden>
+                <p class="agent-log-title">AGENT TRACE · 실행 기록</p>
+              </div>
+            </div>
+
+            <div class="coach-main">
+              <div class="agent-response" id="agentResponse">
+                <p class="agent-empty">🤖 성찰 코치가 기다리고 있습니다.<br />왼쪽에서 일지를 선택하거나 텍스트를 붙여넣고 [에이전트 실행]을 눌러보세요.</p>
+              </div>
+              <div class="agent-chat" id="agentChat" hidden>
+                <div class="chat-messages" id="chatMessages"></div>
+                <form class="chat-form" id="chatForm">
+                  <input type="text" id="chatInput" placeholder="코치에게 더 물어보기 (예: 학생 선택권을 늘리는 방법은?)" />
+                  <button class="btn btn-teacher" type="submit">보내기</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 수업 설계 어시스턴트 -->
+        <div class="sub-panel" id="sub-designer" role="tabpanel" hidden>
+          <div class="designer card">
+            <h3>🛠️ 수업 설계 어시스턴트</h3>
+            <p class="section-lead" style="margin-bottom:26px;">몇 가지 질문에 답하면, 에이전트가 학생주도성(목소리·선택·소유권·성찰)과 비계 원리를 담은 수업 설계안을 만들어 드립니다.</p>
+
+            <div class="wizard-step">
+              <label>① 수업 주제 · 과목
+                <input type="text" id="dSubject" placeholder="예: 중2 과학 · 생태계" />
+              </label>
+              <label>② 학습 목표
+                <input type="text" id="dGoal" placeholder="예: 생태계의 물질 순환 과정을 설명할 수 있다" />
+              </label>
+              <label>③ 학생 준비도
+                <select id="dReadiness">
+                  <option value="low">낮음 — 안내가 많이 필요해요</option>
+                  <option value="mid" selected>보통 — 어느 정도 스스로 가능해요</option>
+                  <option value="high">높음 — 스스로 탐구할 수 있어요</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="wizard-step">
+              <p class="wizard-label">④ 담을 주도성 요소 (복수 선택)</p>
+              <div class="choice-grid">
+                <label class="choice"><input type="checkbox" value="voice" checked /> 🗣️ 학생 목소리 · 질문</label>
+                <label class="choice"><input type="checkbox" value="choice" checked /> 🧭 학생 선택권</label>
+                <label class="choice"><input type="checkbox" value="ownership" checked /> 🏠 소유권 · 책임</label>
+                <label class="choice"><input type="checkbox" value="reflection" checked /> 🔁 자기성찰</label>
+              </div>
+            </div>
+
+            <div class="wizard-step">
+              <p class="wizard-label">⑤ 비계 · 안전망 (복수 선택)</p>
+              <div class="choice-grid">
+                <label class="choice"><input type="checkbox" value="question" checked /> ❓ 질문 · 발문 비계</label>
+                <label class="choice"><input type="checkbox" value="material" checked /> 📚 자료 · 보조자료</label>
+                <label class="choice"><input type="checkbox" value="peer" checked /> 🤝 모둠 협력</label>
+                <label class="choice"><input type="checkbox" value="safety" checked /> 🛡️ 실패 안전망</label>
+                <label class="choice"><input type="checkbox" value="feedback" checked /> 💬 피드백 루틴</label>
+              </div>
+            </div>
+
+            <button class="btn btn-teacher" id="designRun" type="button">✨ 설계안 생성</button>
+            <div id="designOutput"></div>
+          </div>
+        </div>
+
+        <!-- 주간 리포트 -->
+        <div class="sub-panel" id="sub-report" role="tabpanel" hidden>
+          <div class="report-wrap">
+            <div class="report-top card">
+              <div class="report-head">
+                <div>
+                  <h3>📊 주간 성찰 리포트</h3>
+                  <p class="mini-note">선택 기간의 일지를 모아 <strong>반복되는 고민 · 성장 포인트 · 다음 주 목표</strong>를 요약하고, 주도성 요소 분포(레이더)와 기록 활동(히트맵)으로 시각화합니다. LLM 연결 시 AI가 리포트를 작성하고, 미설정 시 규칙 기반으로 요약됩니다.</p>
+                </div>
+                <div class="report-controls">
+                  <label class="report-period">기간
+                    <select id="reportDays">
+                      <option value="7">최근 7일</option>
+                      <option value="14">최근 14일</option>
+                      <option value="28">최근 28일</option>
+                    </select>
+                  </label>
+                  <button class="btn btn-teacher" id="reportRun" type="button">🚀 리포트 생성</button>
+                  <span class="mode-pill" id="reportModePill">🧩 규칙 모드</span>
+                </div>
+              </div>
+              <div id="reportStats" class="report-stats"></div>
+              <div class="agent-log" id="reportLog" hidden>
+                <p class="agent-log-title">AGENT TRACE · 리포트 실행 기록</p>
+              </div>
+            </div>
+
+            <div id="reportOutput"></div>
+
+            <div class="report-viz-grid">
+              <div class="report-card card">
+                <h4>🕸️ 주도성 요소 레이더</h4>
+                <p class="viz-caption">선택 기간 일지에 나타난 학생주도성 요소별 비중입니다.</p>
+                <div class="radar-wrap">
+                  <canvas id="radarCanvas" width="560" height="440" role="img" aria-label="주도성 요소 레이더 차트"></canvas>
+                </div>
+                <div class="radar-legend" id="radarLegend"></div>
+              </div>
+              <div class="report-card card">
+                <h4>🔥 최근 12주 활동 히트맵</h4>
+                <p class="viz-caption">날짜별 성찰 기록 수입니다. 셀을 가리키면 날짜가 보이고, 진할수록 기록이 많습니다.</p>
+                <div class="heatmap-scroll">
+                  <div class="heatmap" id="heatmap"></div>
+                </div>
+                <div class="heatmap-scale">
+                  <span>적음</span>
+                  <i class="hm-cell" data-lvl="0"></i>
+                  <i class="hm-cell" data-lvl="1"></i>
+                  <i class="hm-cell" data-lvl="2"></i>
+                  <i class="hm-cell" data-lvl="3"></i>
+                  <i class="hm-cell" data-lvl="4"></i>
+                  <span>많음</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 자가진단 ===== -->
+    <section class="section section-alt" id="check">
+      <div class="container">
+        <p class="section-tag reveal">CHECK · 자가진단</p>
+        <h2 class="section-title reveal">나의 주도성은 지금 몇 걸음일까요?</h2>
+        <p class="section-lead reveal">
+          학생도 교사도 함께 풀 수 있는 8문항입니다. 솔직하게 답하고, 다음 걸음을 설계해 보세요.
+          결과는 저장되지 않으며 오직 나를 돌아보기 위한 것입니다.
+        </p>
+
+        <div class="quiz reveal" id="quiz">
+          <div id="quizIntro">
+            <p class="quiz-greeting">지난 한 달을 떠올리며, 각 문항에 가장 가까운 답을 골라주세요.</p>
+          </div>
+          <div id="quizBody"></div>
+          <div class="quiz-nav">
+            <button class="btn btn-ghost" id="quizPrev" type="button">← 이전</button>
+            <span class="quiz-progress" id="quizProgress">1 / 8</span>
+            <button class="btn btn-student" id="quizNext" type="button">다음 →</button>
+          </div>
+          <button class="btn btn-student quiz-submit" id="quizSubmit" type="button" hidden>결과 보기</button>
+          <div id="quizResult" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section class="section" id="faq">
+      <div class="container">
+        <p class="section-tag reveal">FAQ · 자주 묻는 질문</p>
+        <h2 class="section-title reveal">궁금한 점이 있나요?</h2>
+
+        <div class="faq-list reveal">
+          <details class="faq-item">
+            <summary>학생주도성 = 방치하는 수업인가요?</summary>
+            <p>아닙니다. 학생주도성은 교사의 역할을 없애는 것이 아니라 <strong>역할을 바꾸는 것</strong>입니다. 교사는 정답을 주는 사람에서, 질문을 던지고 비계를 놓고 안전망이 되어 주는 사람으로 변합니다. 오히려 더 치밀한 설계가 필요합니다.</p>
+          </details>
+          <details class="faq-item">
+            <summary>모든 학생이 주도적으로 배울 수 있나요?</summary>
+            <p>주도성은 타고나는 것이 아니라 <strong>자라는 것</strong>입니다. 준비도가 낮은 학생일수록 작고 명확한 선택부터 시작해 성공 경험을 쌓게 하는 것이 중요합니다. 크기와 속도는 달라도 모든 학생이 주도성을 키울 수 있습니다.</p>
+          </details>
+          <details class="faq-item">
+            <summary>진도와 시험 부담 속에서도 가능한가요?</summary>
+            <p>전체를 바꿀 필요는 없습니다. <strong>한 차시 안에서도</strong> 선택권 한 개, 질문 한 개, 성찰 3분으로 시작할 수 있습니다. 작은 변화가 쌓여 수업의 문화를 바꿉니다.</p>
+          </details>
+          <details class="faq-item">
+            <summary>학생주도성이 성적을 떨어뜨리지 않나요?</summary>
+            <p>연구들은 주도적 학습이 <strong>이해와 기억의 깊이</strong>를 높인다고 말합니다. 암기식 학습은 시험 직후 강하지만 오래가지 않습니다. 주도적으로 배운 내용은 더 오래 남고, 전이력이 높습니다.</p>
+          </details>
+          <details class="faq-item">
+            <summary>교사주도성은 학생주도성과 반대 개념인가요?</summary>
+            <p>아닙니다. 둘은 <strong>대립이 아니라 스펙트럼</strong>입니다. 수업의 목적과 학생의 준비도에 따라 균형점이 달라져야 하며, 최선의 수업은 두 주도성이 의도적으로 어우러진 수업입니다.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 마무리 CTA ===== -->
+    <section class="section closing">
+      <div class="container closing-inner reveal">
+        <p class="closing-mark">🌱</p>
+        <h2>오늘, 가장 작은 선택 하나부터</h2>
+        <p>주도성은 거창한 선언에서 시작하지 않습니다.<br />한 번의 질문, 하나의 선택, 한 줄의 성찰에서 시작됩니다.</p>
+        <div class="hero-actions">
+          <a href="#check" class="btn btn-student">나의 주도성 진단해보기</a>
+          <a href="#spaces" class="btn btn-teacher">역할별 공간 둘러보기</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>
+        <p class="footer-brand"><span class="brand-mark">조</span> 주도성의 조화</p>
+        <p class="footer-note">학생과 교사가 함께 만드는 배움에 관한 작은 안내서.<br />배움의 주인은 학생, 길을 여는 손길은 교사입니다.</p>
+      </div>
+      <nav class="footer-nav" aria-label="푸터 메뉴">
+        <a href="#concept">개념</a>
+        <a href="#why">중요성</a>
+        <a href="#harmony">조화</a>
+        <a href="#spaces">역할별 공간</a>
+        <a href="#studio">교사 스튜디오</a>
+        <a href="#check">자가진단</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>교육적 목적의 정보 제공용 사이트입니다 · 본 사이트의 내용은 일반적인 교육 원리를 안내합니다</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="agents.js"></script>
+</body>
+</html>

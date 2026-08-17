@@ -1,0 +1,6 @@
+# 로컬 환경
+.freebuff/
+
+# Node
+node_modules/
+npm-debug.log*
