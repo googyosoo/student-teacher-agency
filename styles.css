@@ -1341,3 +1341,82 @@ textarea { resize: vertical; min-height: 84px; }
 .agent-error strong { font-size: 15px; }
 .agent-error-hint { color: #991b1b; margin-top: 6px; }
 .agent-error .btn { margin-top: 14px; }
+
+/* ============================================================
+   RAG 메모리 패널
+   ============================================================ */
+.memory-panel {
+  margin-top: 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #f0f0ff 0%, #fef8f0 100%);
+}
+.memory-panel h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--teacher-deep);
+  margin-bottom: 4px;
+}
+.memory-panel .mini-note {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+.memory-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.memory-section {
+  margin-top: 10px;
+}
+.memory-section h4 {
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+.memory-section ul {
+  padding-left: 0;
+}
+.memory-section li {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 3px;
+  line-height: 1.5;
+}
+.memory-section li strong {
+  color: var(--teacher-deep);
+}
+.trend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.trend-pill {
+  display: inline-block;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--teacher-soft);
+  color: var(--teacher-deep);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.memory-sync-btn {
+  margin-top: 10px;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.memory-sync-btn:hover {
+  background: var(--teacher-soft);
+  color: var(--teacher-deep);
+  border-color: var(--teacher);
+}

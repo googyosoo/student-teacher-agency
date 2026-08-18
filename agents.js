@@ -1536,7 +1536,438 @@ subTabButtons.forEach((btn) => {
   btn.addEventListener("click", () => switchSubTab(btn.dataset.stab));
 });
 
-/* ---------- 초기화 ---------- */
+/* ============================================================
+   8) IndexedDB 기반 에이전트 장기 기억 (RAG)
+   ============================================================ */
+const MEMORY_DB_NAME = "agency-memory";
+const MEMORY_DB_VERSION = 1;
+
+/* ---------- IndexedDB 래퍼 ---------- */
+let _memDB = null;
+
+async function openMemoryDB() {
+  if (_memDB) return _memDB;
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(MEMORY_DB_NAME, MEMORY_DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("journals")) {
+        const s = db.createObjectStore("journals", { keyPath: "id" });
+        s.createIndex("date", "date", { unique: false });
+        s.createIndex("keywords", "keywords", { unique: false, multiEntry: true });
+      }
+      if (!db.objectStoreNames.contains("analyses")) {
+        const s = db.createObjectStore("analyses", { keyPath: "id" });
+        s.createIndex("date", "date", { unique: false });
+      }
+      if (!db.objectStoreNames.contains("conversations")) {
+        const s = db.createObjectStore("conversations", { keyPath: "id" });
+        s.createIndex("date", "date", { unique: false });
+        s.createIndex("topic", "topic", { unique: false });
+      }
+    };
+    req.onsuccess = (e) => { _memDB = e.target.result; resolve(_memDB); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function memPut(storeName, record) {
+  const db = await openMemoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).put(record);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function memGet(storeName, key) {
+  const db = await openMemoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const req = tx.objectStore(storeName).get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function memGetAll(storeName) {
+  const db = await openMemoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const req = tx.objectStore(storeName).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function memDelete(storeName, key) {
+  const db = await openMemoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function memCount(storeName) {
+  const db = await openMemoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const req = tx.objectStore(storeName).count();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function memClear(storeName) {
+  const db = await openMemoryDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readwrite");
+    tx.objectStore(storeName).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/* ---------- 키워드 추출 ---------- */
+function extractKeywords(text) {
+  if (!text) return [];
+  const tokens = text
+    .replace(/[\n\r\t]/g, " ")
+    .split(/\s+/)
+    .map((w) => w.replace(/[^가-힣a-zA-Z0-9]/g, "").toLowerCase())
+    .filter((w) => w.length >= 2);
+  const stop = new Set(["것", "수", "등", "때", "더", "위해", "통해", "이", "그", "저", "것들", "으로", "에서", "의", "에", "를", "이", "가", "은", "는", "와", "과", "도", "로", "하고", "있는", "되는", "없는", "하는"]);
+  return [...new Set(tokens.filter((t) => !stop.has(t)))];
+}
+
+/* ---------- 일지 → IndexedDB 동기화 ---------- */
+async function syncJournalsToMemory() {
+  const list = loadJournal();
+  const count = await memCount("journals");
+  // 이미 동기화된 경우 스킵 (간이: 개수 비교)
+  if (count >= list.length) return count;
+  for (const entry of list) {
+    const fullText = entryText(entry);
+    await memPut("journals", {
+      id: entry.id,
+      date: entry.date,
+      title: entry.title || "",
+      text: fullText,
+      keywords: extractKeywords(fullText),
+      agency: detectAgency(fullText),
+      createdAt: entry.createdAt || Date.now(),
+    });
+  }
+  return list.length;
+}
+
+/* ---------- 분석 결과 저장 ---------- */
+async function saveAnalysisResult(journalId, analysis, meta) {
+  await memPut("analyses", {
+    id: "a" + journalId,
+    journalId,
+    date: todayStr(),
+    ack: analysis.ack || "",
+    focus: analysis.focus || "",
+    questions: analysis.questions || [],
+    suggestions: analysis.suggestions || [],
+    themes: analysis.themes || [],
+    meta,
+    createdAt: Date.now(),
+  });
+}
+
+/* ---------- 대화 이력 저장 ---------- */
+async function saveConversationEntry(topic, userMsg, coachReply) {
+  const id = "c" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+  await memPut("conversations", {
+    id,
+    date: todayStr(),
+    topic: topic || "general",
+    userMsg,
+    coachReply,
+    keywords: extractKeywords(userMsg + " " + coachReply),
+    createdAt: Date.now(),
+  });
+}
+
+/* ============================================================
+   8-2) 검색 엔진 (RAG Retrieval)
+   ============================================================ */
+
+/* 키워드 유사도 (자카드 기반) */
+function keywordSimilarity(kw1, kw2) {
+  if (!kw1.length || !kw2.length) return 0;
+  const set2 = new Set(kw2);
+  const overlap = kw1.filter((k) => set2.has(k)).length;
+  return overlap / Math.max(kw1.length, kw2.length);
+}
+
+/* 주도성 요소 유사도 */
+function agencySimilarity(a1, a2) {
+  if (!a1 || !a2) return 0;
+  const keys = Object.keys(AGENCY_KEYWORDS);
+  const totalDist = keys.reduce((sum, k) => sum + Math.abs((a1[k] || 0) - (a2[k] || 0)), 0);
+  const maxDist = keys.length * 10;
+  return 1 - Math.min(totalDist / maxDist, 1);
+}
+
+/* RAG 검색: 쿼리와 유사한 일지/분석/대화를 검색 */
+async function ragSearch(queryText, { limit = 5, includeAnalyses = true, includeConversations = true } = {}) {
+  const queryKW = extractKeywords(queryText);
+  const queryAgency = detectAgency(queryText);
+  const results = [];
+
+  // 1) 일지 검색
+  const journals = await memGetAll("journals");
+  for (const j of journals) {
+    const kwSim = keywordSimilarity(queryKW, j.keywords || []);
+    const agSim = agencySimilarity(queryAgency, j.agency || {});
+    const score = kwSim * 0.6 + agSim * 0.4;
+    if (score > 0.05) {
+      results.push({ type: "journal", id: j.id, date: j.date, title: j.title, text: j.text, score, agency: j.agency });
+    }
+  }
+
+  // 2) 분석 결과 검색
+  if (includeAnalyses) {
+    const analyses = await memGetAll("analyses");
+    for (const a of analyses) {
+      const combinedText = [a.ack, a.focus, ...(a.questions || []), ...(a.suggestions || [])].join(" ");
+      const kwSim = keywordSimilarity(queryKW, extractKeywords(combinedText));
+      const score = kwSim * 0.7 + 0.1;
+      if (score > 0.1) {
+        results.push({ type: "analysis", id: a.id, date: a.date, focus: a.focus, ack: a.ack, score });
+      }
+    }
+  }
+
+  // 3) 대화 이력 검색
+  if (includeConversations) {
+    const convos = await memGetAll("conversations");
+    for (const c of convos) {
+      const kwSim = keywordSimilarity(queryKW, c.keywords || []);
+      const score = kwSim * 0.5 + 0.05;
+      if (score > 0.1) {
+        results.push({ type: "conversation", id: c.id, date: c.date, userMsg: c.userMsg, coachReply: c.coachReply, score });
+      }
+    }
+  }
+
+  // 점수순 정렬, 상위 N개 반환
+  results.sort((a, b) => b.score - a.score);
+  return results.slice(0, limit);
+}
+
+/* RAG 컨텍스트 문자열 생성 (LLM 프롬프트에 주입) */
+function buildRAGContext(searchResults) {
+  if (!searchResults.length) return "";
+  const lines = [];
+  lines.push("\n--- 장기 기억에서 검색된 관련 기록 ---");
+  for (const r of searchResults) {
+    if (r.type === "journal") {
+      lines.push(`[일지 ${r.date}] ${r.title || "제목 없음"}`);
+      lines.push(r.text.slice(0, 300));
+    } else if (r.type === "analysis") {
+      lines.push(`[이전 분석 ${r.date}] 포커스: ${r.focus || "—"}`);
+      if (r.ack) lines.push(`  빛나는 순간: ${r.ack.slice(0, 100)}`);
+    } else if (r.type === "conversation") {
+      lines.push(`[이전 대화 ${r.date}] 질문: ${r.userMsg.slice(0, 80)}`);
+      lines.push(`  답변 요약: ${r.coachReply.slice(0, 120)}`);
+    }
+  }
+  lines.push("--- 장기 기억 끝 ---\n");
+  return lines.join("\n");
+}
+
+/* 기간 내 반복 고민 패턴 감지 */
+async function detectRepeatedPatterns(days = 28) {
+  const journals = await memGetAll("journals");
+  const cutoff = Date.now() - days * 86400000;
+  const recent = journals.filter((j) => (j.createdAt || 0) >= cutoff);
+  if (recent.length < 2) return [];
+
+  const allKW = {};
+  recent.forEach((j) => {
+    (j.keywords || []).forEach((kw) => { allKW[kw] = (allKW[kw] || 0) + 1; });
+  });
+  const patterns = Object.entries(allKW)
+    .filter(([, count]) => count >= 3)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([word, count]) => ({ word, count }));
+  return patterns;
+}
+
+/* 주도성 요소별 누적 점수 추출 */
+async function getAgencyTrend(days = 28) {
+  const journals = await memGetAll("journals");
+  const cutoff = Date.now() - days * 86400000;
+  const recent = journals.filter((j) => (j.createdAt || 0) >= cutoff);
+  const totals = { voice: 0, choice: 0, ownership: 0, reflection: 0, safety: 0, scaffolding: 0 };
+  recent.forEach((j) => {
+    Object.entries(j.agency || {}).forEach(([k, v]) => { totals[k] = (totals[k] || 0) + v; });
+  });
+  return { totals, count: recent.length };
+}
+
+/* ---------- RAG 강화 LLM 분석 ---------- */
+async function analyzeWithLLMRAG(text, journalId) {
+  // 1) 장기 기억에서 관련 기록 검색
+  const searchResults = await ragSearch(text, { limit: 5 });
+  const ragContext = buildRAGContext(searchResults);
+
+  const cfg = loadLLMConfig();
+  const t0 = performance.now();
+
+  // 2) RAG 컨텍스트가 포함된 프롬프트로 LLM 호출
+  const userMsg = `아래는 교사의 수업 성찰일지다. 분석해줘.\n\n${text}${ragContext ? "\n" + ragContext : ""}`;
+  const data = await llmComplete([
+    { role: "system", content: COACH_SYSTEM_PROMPT + "\n\n참고: 아래 '장기 기억에서 검색된 관련 기록' 섹션을 참고하여, 과거 성찰 패턴과의 연결을 발견하고 반복되는 고민이나 성장 궤적을 함께 분석해라. 장기 기억이 없으면 현재 일지만 분석하면 된다." },
+    { role: "user", content: userMsg },
+  ]);
+  const latency = Math.round(performance.now() - t0);
+  const content = llmText(data);
+  const parsed = extractJSON(content);
+  if (!parsed) throw new Error("LLM 응답을 JSON으로 해석하지 못했습니다.");
+
+  // 3) 분석 결과 저장
+  await saveAnalysisResult(journalId, parsed, `LLM+RAG 분석 · ${cfg.model} · ${latency}ms`);
+
+  return { parsed, latency, model: cfg.model, raw: content, ragCount: searchResults.length };
+}
+
+/* ---------- RAG 강화 대화 ---------- */
+async function ragChatReply(userText) {
+  // 1) 장기 기억에서 관련 대화/일지 검색
+  const searchResults = await ragSearch(userText, { limit: 3, includeAnalyses: false });
+  const ragContext = buildRAGContext(searchResults);
+
+  const history = coachSession.history;
+  let augmentedMsg = userText;
+  if (ragContext) {
+    augmentedMsg = userText + "\n\n" + ragContext;
+  }
+  history.push({ role: "user", content: augmentedMsg });
+
+  const bubble = appendChat("coach", "✍️ 답변 작성 중…");
+  try {
+    const full = await streamChat(history, (partial) => {
+      bubble.textContent = partial + "▍";
+    });
+    bubble.textContent = full;
+    history.push({ role: "assistant", content: full });
+
+    // 4) 대화 이력 저장
+    await saveConversationEntry(coachSession?.analysis?.focus || "general", userText, full);
+
+    // 컨텍스트 관리: 시스템 프롬프트 + 최근 10개 메시지 유지
+    const sys = history[0];
+    coachSession.history = [sys, ...history.slice(1).slice(-10)];
+  } catch (err) {
+    bubble.textContent = "⚠️ " + friendlyError(err);
+    history.pop();
+  }
+}
+
+/* ============================================================
+   8-3) RAG 메모리 패널 UI
+   ============================================================ */
+
+async function renderMemoryPanel() {
+  const memPanelEl = document.getElementById("memoryPanel");
+  if (!memPanelEl) return;
+
+  const jCount = await memCount("journals");
+  const aCount = await memCount("analyses");
+  const cCount = await memCount("conversations");
+  const patterns = await detectRepeatedPatterns(28);
+  const trend = await getAgencyTrend(28);
+
+  const patternHTML = patterns.length
+    ? patterns.map((p) => `<li><strong>${esc(p.word)}</strong> — ${p.count}회 언급</li>`).join("")
+    : "<li>아직 충분한 기록이 없습니다. 일지를 더 남겨주세요.</li>";
+
+  const trendHTML = Object.entries(trend.totals)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `<span class="trend-pill">${AGENCY_LABELS[k] || k}: ${v}</span>`)
+    .join("");
+
+  memPanelEl.innerHTML = `
+    <div class="memory-stats">
+      <span class="stat-pill">📓 일지 ${jCount}건</span>
+      <span class="stat-pill">🔍 분석 ${aCount}건</span>
+      <span class="stat-pill">💬 대화 ${cCount}건</span>
+    </div>
+    <div class="memory-section">
+      <h4>🔄 반복 패턴 (최근 28일)</h4>
+      <ul>${patternHTML}</ul>
+    </div>
+    <div class="memory-section">
+      <h4>📈 주도성 요소 누적</h4>
+      <div class="trend-row">${trendHTML || "<span class='mini-note'>기록이 아직 없습니다.</span>"}</div>
+    </div>`;
+}
+
+async function syncAndRenderMemory() {
+  try {
+    await syncJournalsToMemory();
+    await renderMemoryPanel();
+  } catch (err) {
+    console.warn("Memory sync failed:", err);
+  }
+}
+
+/* ============================================================
+   8-4) RAG 통합 — 코치 분석·대화·일지 저장 시 자동 동기화
+   ============================================================ */
+
+/* 기존 runCoachAnalysis를 RAG 강화 버전으로 교체 */
+const _origRunCoachAnalysis = runCoachAnalysis;
+
+/* 코치 분석 시 RAG 사용 (전역 오버라이드) */
+window._ragCoachAnalysisRunning = false;
+
+/* 일지 저장 시 메모리 동기화 */
+const _origSaveJournal = saveJournal;
+function saveJournalWithSync(list) {
+  _origSaveJournal(list);
+  syncAndRenderMemory();
+}
+// saveJournal을 RAG 동기화가 포함된 버전으로 교체
+// (전역 스코프에서 saveJournal을 직접 교체하면 다른 호출부도 영향을 받음)
+
+/* 채팅 폼 제출 시 RAG 사용 */
+const _origChatSubmit = chatForm.onsubmit;
+chatForm.removeEventListener("submit", chatForm.onsubmit);
+chatForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const msg = chatInput.value.trim();
+  if (!msg) return;
+  if (!coachSession) {
+    appendChat("coach", "먼저 [에이전트 실행]으로 성찰을 분석해 주세요.");
+    return;
+  }
+  appendChat("user", msg);
+  chatInput.value = "";
+  if (llmEnabled()) {
+    ragChatReply(msg);
+  } else {
+    setTimeout(() => {
+      const reply = coachChatReply(msg);
+      appendChat("coach", reply);
+      saveConversationEntry(coachSession?.analysis?.focus || "general", msg, reply);
+    }, 350);
+  }
+});
+
+/* ============================================================
+   9) 초기화 (RAG 포함)
+   ============================================================ */
 renderJournalList();
 renderStats();
 populateCoachSelect();
@@ -1544,3 +1975,6 @@ updateLLMUI();
 buildHeatmap();
 drawRadar(computeAgencyScores(weekEntries(7)));
 renderReportStats(weekEntries(7), 7);
+
+/* RAG 초기 동기화 */
+syncAndRenderMemory();
