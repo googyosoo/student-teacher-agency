@@ -773,6 +773,8 @@ const llmApiKeyEl = document.getElementById("llmApiKey");
 const llmModelEl = document.getElementById("llmModel");
 const llmModePill = document.getElementById("llmModePill");
 const llmStatusEl = document.getElementById("llmStatus");
+const designModePillEl = document.getElementById("designModePill");
+const reportModePillEl = document.getElementById("reportModePill");
 
 function updateLLMUI() {
   const cfg = loadLLMConfig();
@@ -786,6 +788,16 @@ function updateLLMUI() {
   llmStatusEl.textContent = enabled
     ? `✓ 연결 대상: ${PROVIDER_LABELS[cfg.provider] || cfg.provider} · ${cfg.model} · ${cfg.baseUrl}`
     : `미설정 — 규칙 기반 분석을 사용합니다. OpenAI 호환 API 또는 Google Gemini를 연결하면 더 깊은 분석이 가능합니다.`;
+  // 수업 설계 어시스턴트 모드 표시
+  if (designModePillEl) {
+    designModePillEl.textContent = enabled ? "🤖 LLM 모드" : "🧩 규칙 모드";
+    designModePillEl.classList.toggle("llm-on", enabled);
+  }
+  // 주간 리포트 모드 표시
+  if (reportModePillEl) {
+    reportModePillEl.textContent = enabled ? "🤖 LLM 모드" : "🧩 규칙 모드";
+    reportModePillEl.classList.toggle("llm-on", enabled);
+  }
 }
 
 // 제공자 전환 시 기본 주소·모델 자동 제안
@@ -899,6 +911,79 @@ function generatePlan() {
   return { subject, goal, readiness, intro, body, close, scaffold, assess, elements };
 }
 
+async function generatePlanWithLLM() {
+  const subject = dSubject.value.trim();
+  const goal = dGoal.value.trim();
+  const readiness = dReadiness.value;
+  const elements = checkedValues();
+
+  if (!subject || !goal) {
+    alert("수업 주제와 학습 목표를 입력해 주세요.");
+    return null;
+  }
+
+  const designLogEl = document.getElementById("designLog");
+  clearAgentLog(designLogEl);
+  designOutput.innerHTML = "";
+
+  const cfg = loadLLMConfig();
+  logAgentStep("🧠", "목표 설정", `수업 설계안 생성 (LLM 엔진)`, true, designLogEl);
+  logAgentStep("🗂️", "도구 선택", `llmChatCompletion(${cfg.model}, json)`, true, designLogEl);
+  await delay(200);
+
+  const userPrompt = `아래 조건으로 수업 설계안을 만들어줘.
+
+수업 주제: ${subject}
+학습 목표: ${goal}
+학생 준비도: ${readiness === "low" ? "낮음" : readiness === "high" ? "높음" : "보통"}
+담을 주도성 요소: ${elements.filter(e => ["voice", "choice", "ownership", "reflection"].includes(e)).map(e => AGENCY_LABELS[e]).join(", ") || "전체"}
+비계·안전망 요소: ${elements.filter(e => ["question", "material", "peer", "safety", "feedback"].includes(e)).map(e => { const labels = {question:"질문·발문 비계", material:"자료·보조자료", peer:"모둠 협력", safety:"실패 안전망", feedback:"피드백 루틴"}; return labels[e]; }).join(", ") || "전체"}`;
+
+  try {
+    const t0 = performance.now();
+    const data = await llmComplete([
+      { role: "system", content: DESIGN_SYSTEM_PROMPT },
+      { role: "user", content: userPrompt },
+    ]);
+    const latency = Math.round(performance.now() - t0);
+    const content = llmText(data);
+    const parsed = extractJSON(content);
+    if (!parsed) throw new Error("LLM 응답을 JSON으로 해석하지 못했습니다.");
+
+    const plan = {
+      subject: parsed.subject || subject,
+      goal: parsed.goal || goal,
+      readiness: parsed.readiness || readiness,
+      intro: Array.isArray(parsed.intro) && parsed.intro.length ? parsed.intro : generatePlan().intro,
+      body: Array.isArray(parsed.body) && parsed.body.length ? parsed.body : generatePlan().body,
+      close: Array.isArray(parsed.close) && parsed.close.length ? parsed.close : generatePlan().close,
+      scaffold: Array.isArray(parsed.scaffold) && parsed.scaffold.length ? parsed.scaffold : generatePlan().scaffold,
+      assess: parsed.assess || generatePlan().assess,
+      elements,
+    };
+
+    logAgentStep("📡", "LLM 호출", `${cfg.model} · ${latency}ms · JSON 응답 파싱 완료`, true, designLogEl);
+    logAgentStep("🧩", "응답 합성", "설계안 구성 완료", true, designLogEl);
+
+    return plan;
+  } catch (err) {
+    const msg = friendlyError(err);
+    logAgentStep("⚠️", "오류 발생", msg, true, designLogEl);
+    designOutput.innerHTML = `
+      <div class="agent-error">
+        <strong>⚠️ LLM 설계안 생성에 실패했습니다.</strong>
+        <p>${esc(msg)}</p>
+        <p class="agent-error-hint">API 설정을 확인하거나, 아래 버튼으로 규칙 기반 설계안으로 전환해 보세요.</p>
+        <button class="btn btn-ghost" type="button" id="designFallback">🧩 규칙 기반으로 다시 생성</button>
+      </div>`;
+    designOutput.querySelector("#designFallback").addEventListener("click", () => {
+      const plan = generatePlan();
+      if (plan) renderPlan(plan);
+    });
+    return null;
+  }
+}
+
 function renderPlan(plan) {
   const readinessLabel = { low: "낮음", mid: "보통", high: "높음" }[plan.readiness];
   const metaPills =
@@ -1005,9 +1090,14 @@ function fallbackCopy(text) {
   alert("설계안이 클립보드에 복사되었습니다.");
 }
 
-document.getElementById("designRun").addEventListener("click", () => {
-  const plan = generatePlan();
-  if (plan) renderPlan(plan);
+document.getElementById("designRun").addEventListener("click", async () => {
+  if (llmEnabled()) {
+    const plan = await generatePlanWithLLM();
+    if (plan) renderPlan(plan);
+  } else {
+    const plan = generatePlan();
+    if (plan) renderPlan(plan);
+  }
 });
 
 /* ============================================================
@@ -1015,7 +1105,6 @@ document.getElementById("designRun").addEventListener("click", () => {
    ============================================================ */
 const reportDaysEl = document.getElementById("reportDays");
 const reportRunEl = document.getElementById("reportRun");
-const reportModePillEl = document.getElementById("reportModePill");
 const reportStatsEl = document.getElementById("reportStats");
 const reportOutputEl = document.getElementById("reportOutput");
 const reportLogEl = document.getElementById("reportLog");
@@ -1065,6 +1154,29 @@ const WEEKLY_SYSTEM_PROMPT = `너는 한국의 교육 전문가이자 '주간 �
   "nextWeekGoals": ["다음 주에 시도할 구체적 목표 2~3개"],
   "focus": "다음 주 한 가지 집중 포커스 (한 문장)"
 }`;
+
+const DESIGN_SYSTEM_PROMPT = `너는 한국의 교육 전문가이자 '수업 설계 어시스턴트'다. 교사가 입력한 주제, 목표, 준비도, 선택한 주도성 요소와 비계 요소를 바탕으로 학생주도성을 실현하는 수업 설계안을 만든다.
+반드시 아래 JSON 구조로만 답하고, JSON 외의 텍스트는 절대 출력하지 마라.
+{
+  "subject": "수업 주제",
+  "goal": "학습 목표",
+  "readiness": "low 또는 mid 또는 high",
+  "intro": ["도입 활동 2~4개 (구체적으로, 학생이 무엇을 하는지 명시)"],
+  "body": ["전개 활동 3~5개 (구체적으로, 학생이 무엇을 하는지 명시)"],
+  "close": ["정리 활동 2~3개 (구체적으로, 학생이 무엇을 하는지 명시)"],
+  "scaffold": ["비계·안전망 2~4개 (구체적으로, 어떤 도움을 제공하는지 명시)"],
+  "assess": "평가·성찰 방법 (한 문장, 준비도에 맞게)"
+}
+
+수업 설계 원칙:
+1. 학생의 목소리(질문·의견)가 수업에 반영되도록 설계할 것
+2. 학생이 선택할 수 있는 기회를 반드시 포함할 것
+3. 결과물의 주인은 학생임을 명확히 할 것
+4. 성찰 시간을 수업에 자연스럽게 포함할 것
+5. 실패해도 괜찮은 안전한 분위기를 만들 것
+6. 학생의 준비도에 맞는 비계(발판)를 제공할 것
+7. 구체적이고 실행 가능한 활동으로 기술할 것
+`;
 
 function ruleWeekSummary(entries) {
   const all = entries.map(entryText).join(" ");
@@ -1310,12 +1422,6 @@ function buildHeatmap() {
     cells.join("");
 }
 
-function updateReportModeUI() {
-  const enabled = llmEnabled();
-  reportModePillEl.textContent = enabled ? "🤖 LLM 모드" : "🧩 규칙 모드";
-  reportModePillEl.classList.toggle("llm-on", enabled);
-}
-
 function renderReportStats(entries, days) {
   const total = loadJournal().length;
   const hardCount = entries.filter((e) => e.hard).length;
@@ -1339,7 +1445,6 @@ async function runReport() {
     reportOutputEl.innerHTML =
       `<div class="report-empty">🌱 최근 ${days}일 동안 기록이 없습니다.<br />성찰일지 탭에서 첫 기록을 남겨보세요. 그래야 주간 리포트가 쌓인 기록을 바탕으로 만들어집니다.</div>`;
     drawRadar(computeAgencyScores([]));
-    updateReportModeUI();
     return;
   }
 
@@ -1349,7 +1454,6 @@ async function runReport() {
   clearAgentLog(reportLogEl);
   reportOutputEl.innerHTML = "";
   const enabled = llmEnabled();
-  updateReportModeUI();
   const cfg = loadLLMConfig();
 
   logAgentStep("🧠", "목표 설정", enabled ? `최근 ${days}일 성찰 ${entries.length}개 주간 요약 (LLM 엔진)` : `최근 ${days}일 성찰 ${entries.length}개 주간 요약 (규칙 엔진)`, true, reportLogEl);
@@ -1437,7 +1541,6 @@ renderJournalList();
 renderStats();
 populateCoachSelect();
 updateLLMUI();
-updateReportModeUI();
 buildHeatmap();
 drawRadar(computeAgencyScores(weekEntries(7)));
 renderReportStats(weekEntries(7), 7);
